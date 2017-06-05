@@ -62,37 +62,16 @@ class stringUtility {
 
             $fh = fopen($file, 'r+');
             //$wfh = fopen('a'.$file,'wb');
-            $r_line = '';
+            $newLines = '';
             while ($line = fgets($fh, 4096)) {
-                // print "$file " . ftell($fh) . "\n";
-                //print $line."\n";
-                preg_match('/^\[((?P<time>[^\]]+))\]((?P<lyric>.*))/', $line, $matches);
 
-
-                if (isset($matches['time']) && strlen($matches['time']) >= 9) {
-                    $tmp = substr($matches['time'], 0, -1);
-                    $line = '[' . $tmp . ']' . $matches['lyric'] . "\n";
-                    //print mb_detect_encoding($line);
-                } else {
-                    // echo "skip this line for $file \n";
-                    // print mb_detect_encoding($line);
-                }
-                $r_line .= $line;
-                //mb_detect_order(array('UTF-8','ISO-8859-1'));
-                //$re_line = mb_convert_encoding($line, "UTF-8","ISO-8859-1");
-                //fwrite($fh, $re_line);
+                $newLines .= self::fixTimeTag($line);
             }
-            //break;
-            //print $file."\n";
+
             fclose($fh);
-            //iconv(mb_detect_encoding($r_line,mb_detect_order(), true), "UTF-8", $r_line);
 
-            file_put_contents($file, $r_line);
-            //fclose($wfh);
+            file_put_contents($file, $newLines);
         }
-
-
-        return $matches;
     }
 
     public static function download($url, $filename) {
@@ -116,11 +95,55 @@ class stringUtility {
             fwrite($wfh, fread($urlRes, 1024 * 8), 1024 * 8);
         }
 
-        echo ftell($wfh)." Bytes have been downloaded \n";
+        echo ftell($wfh) . " Bytes have been downloaded \n";
 
         fclose($urlRes);
         fclose($wfh);
         return TRUE;
+    }
+
+    public static function correctLyricString($lyric) {
+
+        $newLines = '';
+
+        foreach (preg_split("/((\r?\n)|(\r\n?))/", $lyric) as $line) {
+
+            //echo $line."\n";
+            $newLines .= self::fixTimeTag($line);
+        }
+        return $newLines;
+    }
+
+    public static function fixTimeTag($line = null) {
+
+        if (!isset($line)) {
+            return FALSE;
+        }
+
+        preg_match('/^\[((?P<time>[^\]]+))\]((?P<lyric>.*))/', $line, $matches);
+
+
+        if (isset($matches['time']) && strlen($matches['time']) >= 9) {
+            $tmp = substr($matches['time'], 0, -1);
+            $line = '[' . $tmp . ']' . $matches['lyric'] . "\n";
+            return $line;
+        }
+
+        return $line;
+    }
+
+    public static function fixLongLine($lyric) {
+
+        $newLine = '';
+        for ($i = 0; $i < strlen($lyric); $i++) {
+
+            if ($lyric[$i] == '[' && !in_array($lyric[$i - 1], array("\n", "\r"))) {
+                $newLine .= "\n";
+            }
+            $newLine .= $lyric[$i];
+        }
+        
+        return $newLine;
     }
 
 }

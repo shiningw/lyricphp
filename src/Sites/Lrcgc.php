@@ -110,7 +110,12 @@ class Lrcgc extends lyricBase {
             //echo (fgets($file))."12222";
             $lyric .= fread($urlRes, 1024 * 8);
         }
+        
+        $newLines = preg_split("/((\r?\n)|(\r\n?))/", $lyric);
 
+        if (count($newLines) < 5) {
+            $lyric = \Lyricphp\stringUtility::fixLongLine($lyric);
+        }
         $this->save($lyric, $filename);
         return TRUE;
     }

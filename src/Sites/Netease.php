@@ -3,6 +3,7 @@
 namespace Lyricphp\Sites;
 
 use Goutte\Client;
+use Lyricphp\stringUtility as utility;
 
 class Netease extends lyricBase {
 
@@ -128,6 +129,11 @@ class Netease extends lyricBase {
         }
 
         echo "downloading lyric for $this->song \n";
+        
+         // $lyricContent = utility::correctLyricString($lyric->lrc->lyric);
+          
+          
+        
         $this->save($lyric->lrc->lyric, $savepath);
 
         return TRUE;
