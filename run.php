@@ -96,7 +96,7 @@ function showHelp() {
 Get lyrics for all mp3 files stored in a directory or specified song from the command line
     
 OPTIONS
-  --directory, -d   The path to search for.
+  --path, -p   The path to search for.
   --help, -h       Display this help.
   --source, -S     The source from which to get lyric(eg netease,lrcgc).
   --song, -s       The song name to search
