@@ -1,0 +1,5 @@
+composer.lock
+phpunit.xml
+vendor
+nbproject
+*.DS_Store
