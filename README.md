@@ -8,4 +8,4 @@ usage:
 
 composer update
 
-php --path PATH-TO-MUSIC FILES --recursive
+php run.php --path PATH-TO-MUSIC FILES --recursive
