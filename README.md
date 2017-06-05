@@ -1,10 +1,11 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- * Author:  benson
- * Created: Jun 5, 2017
- */
+Overview
 
+This tool can get lyrics for all your music files stored in a directory from multiple web sources.
+批量为指定文件目录里的音乐文件下载歌词,支持多个源下载
+
+
+usage:
+
+composer update
+
+php --path PATH-TO-MUSIC FILES --recursive
