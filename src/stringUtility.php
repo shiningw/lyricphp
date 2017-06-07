@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace Lyricphp;
 
 class stringUtility {
@@ -17,7 +11,7 @@ class stringUtility {
             $fh = fopen($file, 'rb');
             $str = '';
             while ($line = fgets($fh, 4096)) {
-
+                //if the line is already CRLF line ended,make no change
                 if (strpos($line, "\r\n") !== FALSE) {
                     $str .= $line;
                 } else {
@@ -53,7 +47,7 @@ class stringUtility {
     }
 
     /*
-     * remove useless zero in timeline
+     * remove useless zero in time tag
      */
 
     public static function correctLyric($files) {
@@ -108,11 +102,15 @@ class stringUtility {
 
         foreach (preg_split("/((\r?\n)|(\r\n?))/", $lyric) as $line) {
 
-            //echo $line."\n";
+          
             $newLines .= self::fixTimeTag($line);
         }
         return $newLines;
     }
+
+    /* [00:11:230] time tag like this will make the lrc file not work on some car built-in player.
+     * removal of the last zero will fix the issue.
+     */
 
     public static function fixTimeTag($line = null) {
 
@@ -132,17 +130,21 @@ class stringUtility {
         return $line;
     }
 
-    public static function fixLongLine($lyric) {
+    /* some lyrics from lrcgc come with no new line which is fixed by this function
+     * 
+     */
+
+    public static function fixLongLine($lyric, $delimiter = '[') {
 
         $newLine = '';
         for ($i = 0; $i < strlen($lyric); $i++) {
 
-            if ($lyric[$i] == '[' && !in_array($lyric[$i - 1], array("\n", "\r"))) {
+            if ($lyric[$i] == $delimiter && !in_array($lyric[$i - 1], array("\n", "\r"))) {
                 $newLine .= "\n";
             }
             $newLine .= $lyric[$i];
         }
-        
+
         return $newLine;
     }
 

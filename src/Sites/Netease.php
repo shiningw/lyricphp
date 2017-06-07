@@ -59,16 +59,16 @@ class Netease extends lyricBase {
             'headers' => $this->headers,
         );
 
-        try{
+        try {
             $res = $this->client->request('POST', $this->searchUrl, $params);
-        }catch (Exception $e) {
-            echo $e->getMessage."\n";
+        } catch (Exception $e) {
+            echo $e->getMessage . "\n";
             return FALSE;
         }
-        $contents =  json_decode($res->getBody()->getContents());
+        $contents = json_decode($res->getBody()->getContents());
         //$this->jsonData = json_decode($contents);
-        if(isset($contents->result)) {
-             $this->songData = $contents->result->songs;
+        if (isset($contents->result)) {
+            $this->songData = $contents->result->songs;
         }
         return $this->songData;
     }
@@ -88,27 +88,28 @@ class Netease extends lyricBase {
     }
 
     public function getSongId($singer = null) {
-         if(!isset($singer)) {
-              return $this->songData[0]->id;
-         }
+        if (!isset($singer)) {
+            return $this->songData[0]->id;
+        }
         foreach ($this->songData as $song) {
             $artist = reset($song->artists);
             //print_r($artist);
             if (strpos($artist->name, $singer) !== FALSE || strpos($singer, $artist->name) !== FALSE) {
 
                 return $song->id;
-            } else {
-                //get the first one if no one match
-                if (isset($this->songData[0]->id)) {
-                    return $this->songData[0]->id;
-                }
             }
+        }
+
+
+        //get the first one if no one match
+        if (isset($this->songData[0]->id)) {
+            return $this->songData[0]->id;
         }
     }
 
     public function download($savepath) {
-       
-        if(file_exists($savepath.".lrc")) {
+
+        if (file_exists($savepath . ".lrc")) {
             //echo "lyric already existed \n";
             return TRUE;
         }
@@ -122,23 +123,21 @@ class Netease extends lyricBase {
         $lyric = $this->searchLyric($songid);
         //$filehandler->saveLyric($lyric->lrc->lyric, $file);
         //echo $lyric->lrc->lyric;
-        
-        if(!isset($lyric->lrc)) {
-             echo "no lyric found for " . $this->song . "\n";
+
+        if (!isset($lyric->lrc)) {
+            echo "no lyric found for " . $this->song . "\n";
             return FALSE;
         }
 
         echo "downloading lyric for $this->song \n";
-        
-         // $lyricContent = utility::correctLyricString($lyric->lrc->lyric);
-          
-          
-        
+
+        //$lyricContent = utility::correctLyricString($lyric->lrc->lyric);
+
+
+
         $this->save($lyric->lrc->lyric, $savepath);
 
         return TRUE;
     }
 
-    
 }
- 
