@@ -2,7 +2,7 @@
 
 namespace Lyricphp\Sites;
 
-class Tiantian extends lyricBase {
+class Qianqian extends lyricBase {
 
     protected $doc;
     protected $lyricCode = NULL, $lyricId = NULL;
@@ -131,27 +131,27 @@ class Tiantian extends lyricBase {
         if ($lrcNodeList->length == 0) {
             return FALSE;
         }
-              
+
         foreach ($lrcNodeList as $lrcNode) {
-           
+
             $artist = $lrcNode->getAttribute("artist");
             if (strpos($artist, $this->singer) !== FALSE || strpos($this->singer, $artist)
                     !== FALSE) {
 
-                $this->setLyricParams($lrcNode,$artist);
+                $this->setLyricParams($lrcNode, $artist);
                 //print $artist . '--' . $this->singer . "\n";
 
                 return;
             }
         }
-     
+
 
         $firstNode = $lrcNodeList->item(0);
 
-        $this->setLyricParams($firstNode);
+        $this->setLyricParams($firstNode, $artist);
     }
 
-    public function setLyricParams(\DOMElement $domelement,$artist = null) {
+    public function setLyricParams(\DOMElement $domelement, $artist = null) {
 
         $id = $domelement->getAttribute("id");
         $title = $domelement->getAttribute("title");
@@ -172,8 +172,21 @@ class Tiantian extends lyricBase {
         if (empty($lrcstr)) {
             return FALSE;
         }
-        $this->downloadMsg();
+        
+        if (stripos($lrcstr,'<?xml') === 0) {
+            $this->doc->loadXML($lrcstr);
 
+            $domNodeList = $this->doc->getElementsByTagName("result");
+
+            if ($domNodeList->length == 1) {
+
+                print $domNodeList->item(0)->getAttribute("errmsg") . "\n";
+
+                return FALSE;
+            }
+        }
+
+        //echo $lrcstr;
         $this->save($lrcstr, $file);
         return TRUE;
     }

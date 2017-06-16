@@ -75,7 +75,8 @@ class Lrcgc extends lyricBase {
 
         foreach ($lrcpageurl as $value) {
 
-            if (strpos($value['artist'], $this->singer) !== FALSE || strpos($this->singer, $value['artist']) !== FALSE) {
+            if (strpos($value['artist'], $this->singer) !== FALSE || strpos($this->singer, $value['artist'])
+                    !== FALSE) {
                 $this->crawler = $this->goutteClient->request('GET', $this->baseUrl . $value['lrcurl']);
 
                 //file_put_contents('dddd.lrc', $content);
@@ -110,12 +111,13 @@ class Lrcgc extends lyricBase {
             //echo (fgets($file))."12222";
             $lyric .= fread($urlRes, 1024 * 8);
         }
-        
+
         $newLines = preg_split("/((\r?\n)|(\r\n?))/", $lyric);
 
         if (count($newLines) < 5) {
             $lyric = \Lyricphp\stringUtility::fixLongLine($lyric);
         }
+
         $this->save($lyric, $filename);
         return TRUE;
     }

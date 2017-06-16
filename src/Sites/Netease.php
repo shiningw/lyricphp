@@ -94,13 +94,14 @@ class Netease extends lyricBase {
         foreach ($this->songData as $song) {
             $artist = reset($song->artists);
             //print_r($artist);
-            if (strpos($artist->name, $singer) !== FALSE || strpos($singer, $artist->name) !== FALSE) {
+            if (strpos($artist->name, $singer) !== FALSE || strpos($singer, $artist->name)
+                    !== FALSE) {
 
                 return $song->id;
             }
         }
 
-
+        return false;
         //get the first one if no one match
         if (isset($this->songData[0]->id)) {
             return $this->songData[0]->id;
@@ -108,11 +109,6 @@ class Netease extends lyricBase {
     }
 
     public function download($savepath) {
-
-        if (file_exists($savepath . ".lrc")) {
-            //echo "lyric already existed \n";
-            return TRUE;
-        }
 
         $this->searchSong($this->song);
         $songid = $this->getSongId($this->singer);
@@ -129,13 +125,11 @@ class Netease extends lyricBase {
             return FALSE;
         }
 
-        echo "downloading lyric for $this->song \n";
 
         //$lyricContent = utility::correctLyricString($lyric->lrc->lyric);
 
-
-
         $this->save($lyric->lrc->lyric, $savepath);
+        \Lyricphp\stringUtility::correctLyric($savepath.".lrc");
 
         return TRUE;
     }

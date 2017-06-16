@@ -50,22 +50,24 @@ class stringUtility {
      * remove useless zero in time tag
      */
 
-    public static function correctLyric($files) {
+    public static function correctLyric($file) {
 
-        foreach ($files as $file) {
 
-            $fh = fopen($file, 'r+');
-            //$wfh = fopen('a'.$file,'wb');
-            $newLines = '';
-            while ($line = fgets($fh, 4096)) {
 
-                $newLines .= self::fixTimeTag($line);
-            }
-
-            fclose($fh);
-
-            file_put_contents($file, $newLines);
+        if (!$fh = fopen($file, 'r+')) {
+             echo "file not found\n";
+             return FALSE;
         }
+        //$wfh = fopen('a'.$file,'wb');
+        $newLines = '';
+        while ($line = fgets($fh, 4096)) {
+
+            $newLines .= self::fixTimeTag($line);
+        }
+
+        fclose($fh);
+
+        file_put_contents($file, $newLines);
     }
 
     public static function download($url, $filename) {
@@ -102,7 +104,7 @@ class stringUtility {
 
         foreach (preg_split("/((\r?\n)|(\r\n?))/", $lyric) as $line) {
 
-          
+
             $newLines .= self::fixTimeTag($line);
         }
         return $newLines;

@@ -20,7 +20,7 @@ abstract class lyricBase {
     protected $Client;
     protected $singer = 'anonymous';
     protected $song;
-
+    public $overwrite;
 
     public function __construct() {
 
@@ -41,17 +41,18 @@ abstract class lyricBase {
     }
 
     public function save($lyric, $file) {
-
-        file_put_contents($file . ".lrc", $lyric);
-        return;
-        if ($fh = fopen($lyric. ".lrc", 'wb')) {
-            fwrite($fh, $lyric);
-        } else {
-
-            throw new Exception("Can not open ${file} \n");
+       $filename = $file.".lrc";
+        if (file_exists($filename) && !$this->overwrite) {
+            echo "lyric already existed \n";
+            return TRUE;
         }
+         $this->downloadMsg();
 
-        fclose($fh);
+        file_put_contents($filename, $lyric);
+    }
+
+    protected function downloadMsg() {
+        echo "downloading lyric for {$this->song} by {$this->singer} \n";
     }
 
 }

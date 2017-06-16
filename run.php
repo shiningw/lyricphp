@@ -8,8 +8,8 @@ use Lyricphp\File;
 use Lyricphp\Sites\Lrcgc;
 use Lyricphp\stringUtility as utility;
 
-$longopts = array("help", "source:", "artist:", "song:", "path:", "recursive","correct");
-$options = getopt("s:p:S:a:RC", $longopts);
+$longopts = array("help", "source:", "artist:", "song:", "path:", "recursive", "correct", "overwrite");
+$options = getopt("s:p:S:a:RCO", $longopts);
 //print_r($options);
 if (isset($options['p'])) {
     $path = $options['p'];
@@ -38,52 +38,74 @@ if (!isset($path)) {
 
 
 if (isset($options['S'])) {
-    $lrcsource = strtolower($options['S']);
+    $lrcsource = ucfirst($options['S']);
 } elseif (isset($options['source'])) {
-    $lrcsource = strtolower($options['source']);
+    $lrcsource = ucfirst($options['source']);
 } else {
-    $lrcsource = 'netease';
+    $lrcsource = 'Netease';
 }
+$recursive = (isset($options['R']) || isset($optons['recursive'])) ? TRUE : FALSE;
+$overwrite = (isset($options['O']) || isset($options['overwrite'])) ? TRUE : FALSE;
+$correctLyric = (isset($options['C']) || isset($options['correct'])) ? TRUE : FALSE;
 
-$netease = new Netease();
-$lrcgc = new Lrcgc();
+
+$lyricClass = "\Lyricphp\Sites\\" . $lrcsource;
+$lyricInstance = new $lyricClass ();
+
+$lyricInstance->overwrite = $overwrite;
+
 
 if (isset($path)) {
-    
-    if(isset($options['C']) || isset($options['correct'])) {
-        $filehandler = new File($path,'lrc');
-        (isset($options['R']) || isset($optons['recursive'])) ? $filehandler->getFilesRecursive() : $filehandler->getFiles();
-        utility::correctLyric($filehandler->Files);
+
+    if ($correctLyric) {
+        $filehandler = new File($path, 'lrc');
+        ($recursive) ? $filehandler->getFilesRecursive() : $filehandler->getFiles();
+        foreach ($filehandler->Files as $file) {
+            utility::correctLyric($file);
+        }
         exit;
     }
-	//$path = 'F:\temp\music\测试';
-    
-    $filehandler = new File($path); //'/Volumes/DATA/temp/music/2100首无损单曲推荐/扩展篇/中文扩展a/'
+    $filehandler = new File($path);
 
-    $songs = (isset($options['R']) || isset($optons['recursive'])) ? $filehandler->getFilesRecursive()->getID3Info() : $filehandler->getFiles()->getID3Info();
+    $songs = ($recursive) ? $filehandler->getFilesRecursive()->getID3Info() : $filehandler->getFiles()->getID3Info();
     batchProcess($songs);
-	//print_r($songs);
 
-    //$filehandler->getFiles();
-    //utility::correctLyric($filehandler->Files);
+    echo count($songs) . " lyrics have been downloaded \n";
     exit;
 }
 
-$netease->setSong($song)->download($song);
-
-//exit;
+$lyricInstance->setSong($song)->setSinger($singer)->download($song);
 
 function batchProcess($songs) {
-    global $netease, $lrcgc;
+    global $lyricInstance, $overwrite;
 
     foreach ($songs as $song) {
         //sleep(1);
-        $netease->setSong($song['title'])->setSinger($song['singer']);
+        $lyricInstance->setSong($song['title'])->setSinger($song['singer']);
         $file = substr($song['file'], 0, -4);
+        
+        if(!$overwrite && file_exists($file.".lrc")) {
+            echo "lyric already existed \n";
+            continue;
+        }
 
-        if (!$netease->download($file)) {
-            echo "switching to lrcgc.com for lyric \n";
-            $lrcgc->setSong($song['title'])->setSinger($song['singer'])->download($file);
+        if (!$lyricInstance->download($file)) {
+            if (in_array(get_class($lyricInstance), array('\Lyricphp\Sites\Qianqian', 'Qianqian'))) {
+                $backupsite = new \Lyricphp\Sites\Netease ();
+            } else {
+                $backupsite = new \Lyricphp\Sites\Qianqian();
+            }
+            $backupsite->overwrite = $overwrite;
+            echo "switching to " . get_class($backupsite) . "  for lyric \n";
+
+            if (!$backupsite->setSong($song['title'])->setSinger($song['singer'])->download($file)) {
+
+                echo "switching to lrcgc.com \n";
+                $lrcgc = new \Lyricphp\Sites\Lrcgc();
+                $lrcgc->overwrite = $overwrite;
+
+                $lrcgc->setSong($song['title'])->setSinger($song['singer'])->download($file);
+            }
         }
     }
 }
@@ -102,8 +124,7 @@ OPTIONS
   --song, -s       The song name to search
   --artist, -a     Filter result by singer
   --correct -C     correct lyric time
-  --recursive -R   search a directory recursively\n
+  --recursive -R   search a directory recursively
+  --overwrite -O   overwrite original lyric file\n
 EOF;
 }
-
-
