@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 //data2/lrc/\d*/\d*.lrc;
 
 namespace Lyricphp\Sites;
@@ -32,64 +26,85 @@ class Lrcgc extends lyricBase {
     public function scrape() {
 
         $url = $this->searchUrl . urlencode($this->song);
-        // print $url;
-        $this->crawler = $this->goutteClient->request('GET', $url);
-//print_r($this->crawler->getBody()->getContents());
-        $this->parse();
+
+        $res = $this->client->Request($url);
+        if (isset($res->data)) {
+            $this->content = $res->data;
+            $this->crawler->addContent($this->content);
+            $this->parse();
+        }
+        return FALSE;
     }
 
     public function parse() {
 
-        $crawler = $this->crawler->filterXPath('//div[@class="so_list"]//li');
+        $crawler = $this->crawler->filterXPath('//div[@class="so_list"]/ul/li');
+        $domNodeList = $crawler->getNode();
+        $data = array();
+        $nodeData = array();
 
-        if ($crawler->count() > 0) {
+        foreach ($domNodeList as $ele) {
 
+            if (!$ele->hasChildNodes()) {
+                continue;
+            }
 
-            $lrcpageurl = $crawler->each(function (Crawler $node, $i) {
-                try {
-                    $artist = $node->children()->eq($node->children()->count() - 2)->text();
-                } catch (\InvalidArgumentException $ex) {
-                    echo $ex->getMessage();
+            foreach ($ele->childNodes as $subele) {
+                if ($crawler->hasChildEle($subele) && $subele->tagName == "span") {
+                    $childA = $subele->childNodes->item(1);
+
+                    if ($childA instanceof \DOMElement && $childA->hasAttribute("href")) {
+                        $nodeData['url'] = $childA->getAttribute("href");
+                    }
                 }
 
-                try {
-                    $lrcurl = $node->children()->filter("a")->attr("href");
-                } catch (\InvalidArgumentException $ex) {
-                    echo $ex->getMessage();
-                }
+                if ($crawler->hasChildEle($subele) && $subele->tagName == "small") {
+                    if ($subele->childNodes->length == 3) {
 
-                if (!isset($lrcurl)) {
-                    return FALSE;
+                        $nodeData['singer'] = $subele->lastChild->nodeValue;
+                    }
                 }
+            }
 
-                return array('artist' => $artist, 'lrcurl' => $lrcurl);
-            });
-        } else {
+            $data[] = $nodeData;
+        }
+
+
+        if ($crawler->count() < 0) {
+
 
             echo "No content found\n";
 
             return FALSE;
         }
 
-        //print_r($lrcpageurl);
+        foreach ($data as $value) {
 
-        foreach ($lrcpageurl as $value) {
-
-            if (strpos($value['artist'], $this->singer) !== FALSE || strpos($this->singer, $value['artist'])
+            if (strpos($value['singer'], $this->singer) !== FALSE || strpos($this->singer, $value['singer'])
                     !== FALSE) {
-                $this->crawler = $this->goutteClient->request('GET', $this->baseUrl . $value['lrcurl']);
-
-                //file_put_contents('dddd.lrc', $content);
-            } else {
-
-                $this->crawler = $this->goutteClient->request('GET', $this->baseUrl . $lrcpageurl[0]['lrcurl']);
+                $lrcpage = $this->client->Request($this->baseUrl . $value['url']);
+                $this->setDownloadUrl($lrcpage);
             }
-            $subcrawler = $this->crawler->filterXPath('//a[@id="J_downlrc"]');
-            if ($subcrawler->count() > 0) {
-                $lrcurl = $subcrawler->attr("href");
-                $suffix_url = preg_replace('/\%2F/i', '/', urlencode($lrcurl));
-                $this->downloadUrl = $this->baseUrl . "/" . $suffix_url;
+        }
+
+
+        $first = reset($data);
+
+        $lrcpage = $this->client->Request($this->baseUrl . $first['url']);
+        $this->setDownloadUrl($lrcpage);
+    }
+
+    private function setDownloadUrl($lrcpage) {
+        $crawler = $this->crawler->addContent($lrcpage->data)->filterXPath('//a[@id="J_downlrc"]');
+
+        if ($crawler->count() > 0) {
+            try {
+                $lrcurl = $crawler->attr("href");
+            } catch (\Exception $e) {
+                echo $e->getMessage() . "\n";
             }
+            $suffix_url = preg_replace('/\%2F/i', '/', urlencode($lrcurl));
+            $this->downloadUrl = $this->baseUrl . "/" . $suffix_url;
         }
     }
 
@@ -108,7 +123,6 @@ class Lrcgc extends lyricBase {
         $lyric = '';
 
         while (!feof($urlRes)) {
-            //echo (fgets($file))."12222";
             $lyric .= fread($urlRes, 1024 * 8);
         }
 

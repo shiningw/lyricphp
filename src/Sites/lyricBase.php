@@ -8,24 +8,24 @@
 
 namespace Lyricphp\Sites;
 
-use Goutte\Client;
+use Lyricphp\Client;
+use Lyricphp\Crawler;
 
 //use GuzzleHttp\Client as GuzzleClient;
 
 abstract class lyricBase {
 
-    //the goutte object
-    protected $goutteClient;
-    //the guzzlehttp Client
-    protected $Client;
+    protected $client;
     protected $singer = 'anonymous';
     protected $song;
     public $overwrite;
+    protected $crawler;
 
     public function __construct() {
 
-        $this->goutteClient = new Client();
-        $this->client = $this->goutteClient->getClient();
+        $this->client = new Client();
+        $this->crawler = new Crawler();
+       
     }
 
     public function setSong($name) {

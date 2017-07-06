@@ -2,7 +2,7 @@
 
 namespace Lyricphp\Sites;
 
-use Goutte\Client;
+use Lyricphp\Client;
 use Lyricphp\stringUtility as utility;
 
 class Netease extends lyricBase {
@@ -32,9 +32,9 @@ class Netease extends lyricBase {
     public function getDefaultHeaders() {
         return array(
             'Accept' => '*/*',
-            'Accept-Encoding' => 'gzip,deflate,sdch',
+            //'Accept-Encoding' => 'gzip,deflate,sdch',
             'Accept-Language' => 'zh-CN,zh;q=0.8,gl;q=0.6,zh-TW;q=0.4',
-            'Connection' => 'keep-alive',
+            //'Connection' => 'keep-alive',
             'Content-Type' => 'application/x-www-form-urlencoded',
             'Host' => 'music.163.com',
             'Referer' => 'http://music.163.com/search/',
@@ -46,26 +46,24 @@ class Netease extends lyricBase {
 
         foreach ($this->getDefaultHeaders() as $key => $value) {
 
-            $this->setHeaders($key, $value);
+            $this->client->setHeaders($key, $value);
         }
-
-        $params = array(
-            'form_params' => array(
+        
+        $data = array(
                 's' => $name,
                 'type' => 1,
                 'offset' => 0,
                 'limit' => 10
-            ),
-            'headers' => $this->headers,
-        );
+            );
 
         try {
-            $res = $this->client->request('POST', $this->searchUrl, $params);
+            $res = $this->client->Request($this->searchUrl, 'POST',$data);
         } catch (Exception $e) {
             echo $e->getMessage . "\n";
             return FALSE;
         }
-        $contents = json_decode($res->getBody()->getContents());
+                       
+        $contents = json_decode($res->data);
         //$this->jsonData = json_decode($contents);
         if (isset($contents->result)) {
             $this->songData = $contents->result->songs;
@@ -76,12 +74,12 @@ class Netease extends lyricBase {
     public function searchLyric($id) {
         $lyricurl = $this->lyricUrl . $id;
         try {
-            $res = $this->client->request('GET', $lyricurl);
+            $res = $this->client->request($lyricurl);
         } catch (Exception $e) {
             echo $e->getMessage();
             return false;
         }
-        $contents = $res->getBody()->getContents();
+        $contents = $res->data;
         $this->lyricData = json_decode($contents);
 
         return $this->lyricData;
@@ -96,7 +94,6 @@ class Netease extends lyricBase {
             //print_r($artist);
             if (strpos($artist->name, $singer) !== FALSE || strpos($singer, $artist->name)
                     !== FALSE) {
-
                 return $song->id;
             }
         }
